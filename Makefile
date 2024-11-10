@@ -5,9 +5,6 @@ COMPILER_DIR = "./src/compiler"
 
 all: build
 
-install-cargo:
-	curl https://sh.rustup.rs -sSf | sh
-
 build:
 	make -C ${TRANSPILER_DIR}
 	make -C ${COMPILER_DIR}

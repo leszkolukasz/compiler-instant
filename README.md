@@ -1,37 +1,73 @@
-# Kompilator
+# Instant compiler
 
-Kompilator składa się z dwóch komponentów: transpilatora z języka instant do kodu pośredniego i właściwego kompilatora z kodu pośredniego do LLVM lub JVM.
+Compiler for a simple programming language: Instant. Targets both LLVM and JVM.
 
-## Transpilator (Haskell)
+## Instant overview
 
-Transpiluje kod w języku instant w kod, który jest prostszy do sparsowania, konkretnie do postaci tekstowej drzewa AST wygenerowanego przez BNFC.
+Instant is a very simple programming language. It has the following grammar:
 
-Użyte biblioteki/narzędzia:
-- BNFC
+```
+Prog. Program ::= [Stmt] ;
+SAss. Stmt ::= Ident "=" Exp;
+SExp. Stmt ::= Exp ;
+separator Stmt ";" ;
 
-## Kompilator (Rust)
+ExpAdd.            Exp1   ::= Exp2 "+"  Exp1 ;
+ExpSub.            Exp2   ::= Exp2 "-"  Exp3 ;
+ExpMul.            Exp3   ::= Exp3 "*"  Exp4 ;
+ExpDiv.            Exp3   ::= Exp3 "/"  Exp4 ;
+ExpLit.            Exp4   ::= Integer ;
+ExpVar.            Exp4   ::= Ident ;
+coercions Exp 4;
+```
 
-Kompiluje kod pośredni do LLVM lub JVM. Cel kompilacji wybiera się przez podanie odpowiedniej opcji podczas kompilowania kodu przez cargo. Implementuje oczekiwanie optymalizacje do JVM.
+### Features:
+- It supports simple arithmetic operations (on integers) and variable assignment.
+- Statements are separated by semicolons.
+- Result of expressions not assigned to a variable is printed to stdout.
 
-Użyte biblioteki/narzędzia:
-- peg - biblioteka do parsowania
-- ariadne - biblioteka do wypisywania błędów ze wskazaniem miejsca w kodzie, gdzie błąd wystąpił (głównie dodane z myślą o latte)
+### Example
 
-Struktura:
+```
+x = 10;
+x = 4 * x + 5 / 2;
+x
+```
 
-- error.rs - obsługa raportowania błedów
-- common.rs - typy/struktury wspólne dla różnych plików
-- parser.rs - parser kodu pośredniego
-- compiler/* - kompilator do jvm/llvm
+will print:
 
-## Uruchomienie
+```
+42
+```
 
-Zbudowanie kompilatora wymaga cargo. Można go zainstalować na studentsie przez `make install-cargo`.
+## Technical overview
 
-Inne reguły:
-- `make` - zbuduj kompilator
-- `make clean` - wyczyść pliki
+Compiler comprises the following parts:
+- transpiler (Haskell) - parses the grammar and transpiles it into simpler IR
+- actual compiler (Rust) - parses the IR and compiles into JVM or LLVM
 
-#### Uwaga
+Compilation target can be chosen by setting appropriate flag when building this project.
 
-Jeśli gramatyka wygenerowana przez transpilator posiada głęboko zagnieżdzone wyrażenia (rzędu > 10^4), być może dojdzie do przepełnienia stosu. Nieduże zwiększenie limitu rozmiaru stosu powinno pomóc.
+## Building
+
+The following rules are supported:
+
+- `make` - build project
+- `make clean` - clean files
+
+## Usage
+
+Building the project will create two binary files:
+
+- `insc_jvm` - compiler that targets JVM
+- `insc_llvm` - compiler that targets LLVM
+
+Running `insc_jvm input.inst` will generate file `input.j` (Jasmin bytecode) and `input.class` (JVM bytecode).
+
+Running `insc_llvm input.inst` will generate file `input.ll` (human-readable LLVM) and `input.bc` (LLVM bitcode).
+
+## Q&A
+
+### Why is transpiler needed?
+
+This project was created as part of the "Compiler design" course at the University of Warsaw. The grammar provided in the course was written for BNFC (BNF Converter) which does not support Rust. While I could have written the parser in Rust, subsequent projects in this course require more complex grammars, thus resulting in a high chance of me making a bug in the parser. As a result, I decided to use BNFC and write the transpiler in Haskell.
