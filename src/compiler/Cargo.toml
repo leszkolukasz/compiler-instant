@@ -1,0 +1,12 @@
+[package]
+name = "compiler"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+llvm = []
+jvm = []
+
+[dependencies]
+ariadne = "0.4.1"
+peg = "0.8.4"
